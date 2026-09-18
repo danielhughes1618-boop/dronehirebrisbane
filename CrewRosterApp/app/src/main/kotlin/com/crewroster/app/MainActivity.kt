@@ -72,6 +72,7 @@ fun CrewRosterApp(viewModel: CrewRosterViewModel = viewModel()) {
     Scaffold(
         bottomBar = {
             BottomNavBar(currentRoute = currentRoute) { screen ->
+                viewModel.clearSelection()
                 navController.navigate(screen.route) {
                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                     launchSingleTop = true

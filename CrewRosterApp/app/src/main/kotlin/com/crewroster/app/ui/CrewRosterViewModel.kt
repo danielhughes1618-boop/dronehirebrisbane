@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,18 +36,18 @@ class CrewRosterViewModel(application: Application) : AndroidViewModel(applicati
     private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 4)
     val events: SharedFlow<UiEvent> = _events.asSharedFlow()
 
-    private var loadedOnce = false
-
     init {
+        // Load once at startup; from then on in-memory _uiState is the single source of
+        // truth for this session (DataStore is a write-only persistence sink here, not a
+        // live sync source) - this app has exactly one writer, so re-collecting every
+        // emission back into _uiState only created a feedback loop where our own writes
+        // (e.g. editDay's historical draft, or a wipe) got read back and reapplied,
+        // sometimes stomping fresher in-memory state that was written after them.
         viewModelScope.launch {
-            store.data.collect { data ->
-                val normalized = ensureTodayDraft(data)
-                _uiState.update { it.copy(appData = normalized, loading = false) }
-                if (!loadedOnce) {
-                    loadedOnce = true
-                    if (normalized != data) persist(normalized)
-                }
-            }
+            val initial = store.data.first()
+            val normalized = ensureTodayDraft(initial)
+            _uiState.update { it.copy(appData = normalized, loading = false) }
+            if (normalized != initial) persist(normalized)
         }
     }
 
@@ -121,6 +122,16 @@ class CrewRosterViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun regenerate() = generate()
+
+    /**
+     * Clears any in-progress swap-selection or open driver picker. Called on every bottom-nav
+     * tap (mirrors the JS reference, which resets both on every nav click) so a pending
+     * selection from a previous visit to Result can never carry over and silently complete an
+     * unintended swap on a different day.
+     */
+    fun clearSelection() {
+        _uiState.update { it.copy(selectedPersonId = null, driverPickerCarIndex = null) }
+    }
 
     // ---- Result screen actions ----
 
@@ -241,6 +252,7 @@ class CrewRosterViewModel(application: Application) : AndroidViewModel(applicati
             dirty = false
         )
         updateData { it.copy(draft = newDraft) }
+        _uiState.update { it.copy(selectedPersonId = null, driverPickerCarIndex = null) }
     }
 
     // ---- Tally / CSV ----
