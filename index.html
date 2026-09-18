@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Crew Roster</title>
+<meta name="theme-color" content="#2a78d6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crew Roster">
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Crew%20Roster%22,%22short_name%22:%22Crew%20Roster%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f9f9f7%22,%22theme_color%22:%22%232a78d6%22}">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232a78d6'/%3E%3Ctext x='50' y='68' font-size='58' font-family='sans-serif' fill='white' text-anchor='middle'%3E%F0%9F%9A%97%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7;
+  --surface:#fcfcfb;
+  --surface-2:#f2f1ee;
+  --text:#0b0b0b;
+  --text-2:#52514e;
+  --muted:#898781;
+  --grid:#e1e0d9;
+  --border:rgba(11,11,11,0.10);
+  --car1:#2a78d6;
+  --car2:#eb6834;
+  --car3:#1baf7a;
+  --good:#0ca30c;
+  --warning:#fab219;
+  --critical:#d03b3b;
+  --seq:#256abf;
+  --seq-track:#e1e0d9;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d;
+    --surface:#1a1a19;
+    --surface-2:#232322;
+    --text:#ffffff;
+    --text-2:#c3c2b7;
+    --muted:#898781;
+    --grid:#2c2c2a;
+    --border:rgba(255,255,255,0.10);
+    --car1:#3987e5;
+    --car2:#d95926;
+    --car3:#199e70;
+    --good:#0ca30c;
+    --warning:#fab219;
+    --critical:#e66767;
+    --seq:#3987e5;
+    --seq-track:#2c2c2a;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d;
+  --surface:#1a1a19;
+  --surface-2:#232322;
+  --text:#ffffff;
+  --text-2:#c3c2b7;
+  --muted:#898781;
+  --grid:#2c2c2a;
+  --border:rgba(255,255,255,0.10);
+  --car1:#3987e5;
+  --car2:#d95926;
+  --car3:#199e70;
+  --good:#0ca30c;
+  --warning:#fab219;
+  --critical:#e66767;
+  --seq:#3987e5;
+  --seq-track:#2c2c2a;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--page);
+  color:var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+button, select, input{ font-family: inherit; }
+h1,h2,h3,p{ margin:0; }
+#cr-app{ max-width:640px; margin:0 auto; padding:16px; padding-bottom:32px; }
+
+.cr-topbar{
+  position:sticky; top:0; z-index:5;
+  background:var(--page);
+  padding:14px 16px 10px;
+  border-bottom:1px solid var(--border);
+}
+.cr-topbar h1{ font-size:20px; font-weight:800; }
+.cr-topbar .cr-date{ color:var(--text-2); font-size:14px; margin-top:2px; }
+
+.cr-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:14px;
+}
+.cr-section-title{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:10px; }
+
+.cr-row{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-height:56px; padding:8px 4px; border-bottom:1px solid var(--grid);
+}
+.cr-row:last-child{ border-bottom:none; }
+.cr-row-name{ font-size:17px; font-weight:600; display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
+.cr-row-name span.cr-name-text{ overflow-wrap:break-word; }
+
+.cr-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; padding:3px 7px; border-radius:999px;
+  flex-shrink:0;
+}
+.cr-badge-tl{ background:var(--car1); color:#fff; }
+.cr-badge-atl{ background:var(--car2); color:#fff; }
+
+.cr-toggle{
+  appearance:none; -webkit-appearance:none;
+  width:56px; height:32px; border-radius:999px;
+  background:var(--grid); position:relative; cursor:pointer; flex-shrink:0;
+  border:1px solid var(--border); transition: background .15s;
+}
+.cr-toggle::after{
+  content:""; position:absolute; top:2px; left:2px; width:26px; height:26px;
+  border-radius:50%; background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.3);
+  transition: transform .15s;
+}
+.cr-toggle.cr-present{ background:var(--good); }
+.cr-toggle.cr-present::after{ transform: translateX(24px); }
+.cr-toggle-label{ font-size:12px; font-weight:700; color:var(--muted); min-width:52px; text-align:right; }
+.cr-toggle-label.cr-is-present{ color:var(--good); }
+.cr-toggle-label.cr-is-absent{ color:var(--critical); }
+
+.cr-btn{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; min-height:56px; border-radius:var(--radius);
+  font-size:17px; font-weight:800; border:none; cursor:pointer;
+  padding:12px 16px;
+}
+.cr-btn-primary{ background:var(--car1); color:#fff; }
+.cr-btn-secondary{ background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+.cr-btn-danger{ background:var(--critical); color:#fff; }
+.cr-btn-ghost{ background:transparent; color:var(--car1); border:1px solid var(--border); }
+.cr-btn:disabled{ opacity:0.45; cursor:not-allowed; }
+.cr-btn-row{ display:flex; gap:10px; }
+.cr-btn-row .cr-btn{ flex:1; }
+.cr-btn-sm{ min-height:40px; font-size:14px; padding:8px 12px; }
+
+.cr-status-line{
+  font-size:15px; color:var(--text-2); padding:6px 4px 14px; line-height:1.4;
+}
+.cr-status-line.cr-blocked{ color:var(--critical); font-weight:700; }
+
+.cr-disclosure summary{
+  list-style:none; cursor:pointer; font-weight:700; padding:10px 4px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cr-disclosure summary::-webkit-details-marker{ display:none; }
+.cr-disclosure summary::after{ content:"▸"; color:var(--muted); transition: transform .15s; }
+.cr-disclosure[open] summary::after{ transform: rotate(90deg); }
+
+.cr-pin-row{ display:flex; flex-direction:column; gap:6px; padding:10px 4px; border-bottom:1px solid var(--grid); }
+.cr-pin-row:last-child{ border-bottom:none; }
+.cr-pin-controls{ display:flex; flex-direction:column; gap:8px; }
+.cr-select{
+  width:100%; min-height:44px; border-radius:10px;
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text);
+  padding:8px 10px; font-size:15px;
+}
+
+.cr-warning-banner{
+  background:rgba(250,178,25,0.14); border:1px solid var(--warning);
+  border-radius:var(--radius); padding:12px 14px; margin-bottom:14px;
+}
+.cr-warning-banner.cr-critical{ background:rgba(208,59,59,0.12); border-color:var(--critical); }
+.cr-warning-banner-title{ font-weight:800; font-size:14px; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.cr-warning-banner ul{ margin:0; padding-left:20px; font-size:14px; color:var(--text-2); }
+.cr-warning-banner.cr-critical ul{ color:var(--text); }
+
+.cr-car-card{ border-radius:var(--radius); border:1px solid var(--border); margin-bottom:14px; overflow:hidden; background:var(--surface); }
+.cr-car-head{ padding:12px 16px; color:#fff; }
+.cr-car-head h3{ font-size:16px; font-weight:800; }
+.cr-driver-row{
+  display:flex; align-items:center; gap:10px; padding:12px 16px;
+  background:var(--surface-2); border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+.cr-driver-icon{ width:30px; height:30px; flex-shrink:0; }
+.cr-driver-text{ flex:1; min-width:0; }
+.cr-driver-text .cr-driver-label{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+.cr-driver-text .cr-driver-name{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cr-driver-name.cr-no-driver{ color:var(--critical); }
+.cr-chevron{ color:var(--muted); font-size:18px; }
+
+.cr-crew-list{ padding:8px 10px; display:flex; flex-wrap:wrap; gap:8px; }
+.cr-chip{
+  display:flex; align-items:center; gap:6px;
+  background:var(--surface-2); border:2px solid transparent;
+  border-radius:999px; padding:10px 14px; font-size:15px; font-weight:600;
+  cursor:pointer; min-height:44px;
+}
+.cr-chip.cr-selected{ border-color:var(--car1); background:rgba(42,120,214,0.14); }
+.cr-chip.cr-is-driver{ background:var(--surface); box-shadow: inset 0 0 0 1.5px var(--grid); }
+
+.cr-seat-count{ font-size:12px; color:rgba(255,255,255,.85); font-weight:700; }
+
+.cr-history-day{ border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; margin-bottom:14px; background:var(--surface); }
+.cr-history-day-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.cr-history-day-head h3{ font-size:16px; font-weight:800; }
+.cr-history-car{ font-size:14px; margin-bottom:8px; padding-left:10px; border-left:4px solid var(--grid); }
+.cr-history-car b{ display:block; }
+.cr-history-actions{ display:flex; gap:8px; margin-top:10px; }
+
+.cr-tally-row{ padding:12px 4px; border-bottom:1px solid var(--grid); }
+.cr-tally-row:last-child{ border-bottom:none; }
+.cr-tally-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.cr-tally-name{ font-weight:700; font-size:16px; }
+.cr-tally-meta{ font-size:12px; color:var(--muted); }
+.cr-tally-bar-track{ height:14px; border-radius:8px; background:var(--seq-track); overflow:hidden; display:flex; align-items:center; }
+.cr-tally-bar-fill{ height:100%; background:var(--seq); border-radius:8px; min-width:6px; }
+.cr-tally-count{ font-size:13px; font-weight:800; color:var(--text-2); margin-left:8px; white-space:nowrap; }
+.cr-tally-bar-row{ display:flex; align-items:center; }
+
+.cr-empty-state{ text-align:center; color:var(--muted); padding:40px 16px; font-size:15px; }
+
+.cr-toast{
+  position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px); background:var(--text); color:var(--page);
+  padding:10px 18px; border-radius:999px; font-size:14px; font-weight:700;
+  opacity:0; transition: opacity .2s, transform .2s; pointer-events:none; z-index:50;
+  max-width:88vw; text-align:center;
+}
+.cr-toast.cr-show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+.cr-modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:flex-end;
+  justify-content:center; z-index:60; padding:16px;
+}
+.cr-modal{
+  background:var(--surface); border-radius:18px; padding:20px; width:100%; max-width:420px;
+  margin-bottom:calc(8px + env(safe-area-inset-bottom));
+}
+.cr-modal h3{ font-size:17px; font-weight:800; margin-bottom:8px; }
+.cr-modal p{ font-size:14px; color:var(--text-2); margin-bottom:16px; line-height:1.5; }
+
+.cr-navbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:10;
+  background:var(--surface); border-top:1px solid var(--border);
+  display:flex; padding-bottom:env(safe-area-inset-bottom);
+}
+.cr-navbtn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:10px 4px 8px; background:none; border:none; color:var(--muted);
+  font-size:11px; font-weight:700; cursor:pointer; min-height:60px;
+}
+.cr-navbtn svg{ width:22px; height:22px; }
+.cr-navbtn.cr-active{ color:var(--car1); }
+
+.cr-textarea{
+  width:100%; min-height:120px; border-radius:10px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--text); padding:10px; font-size:14px;
+  font-family: ui-monospace, monospace; resize:vertical;
+}
+.cr-input{
+  width:100%; min-height:48px; border-radius:10px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--text); padding:10px 12px; font-size:16px;
+}
+.cr-field{ margin-bottom:12px; }
+.cr-field label{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em; }
+
+.cr-link-btn{ background:none; border:none; color:var(--car1); font-weight:700; font-size:14px; cursor:pointer; padding:6px; }
+</style>
+</head>
+<body>
+<div id="cr-app"></div>
+<div id="cr-toast" class="cr-toast"></div>
+<div id="cr-modal-root"></div>
+<nav class="cr-navbar" id="cr-navbar"></nav>
+
+<script>
+(function(){
+"use strict";
+
+var STORAGE_KEY = "crewRosterV1";
+
+function defaultState(){
+  var people = [
+    {id:"tl", name:"Team Leader", role:"TL"},
+    {id:"atl", name:"Assistant Team Leader", role:"ATL"}
+  ];
+  for(var i=1;i<=10;i++){ people.push({id:"bo"+i, name:"Build Officer "+i, role:"BO"}); }
+  return {
+    people: people,
+    vehicles: [
+      {id:"v1", name:"Car 1"},
+      {id:"v2", name:"Car 2"},
+      {id:"v3", name:"Car 3"}
+    ],
+    history: [],
+    draft: null
+  };
+}
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    var parsed = JSON.parse(raw);
+    var d = defaultState();
+    if(Array.isArray(parsed.people) && parsed.people.length) d.people = parsed.people;
+    if(Array.isArray(parsed.vehicles) && parsed.vehicles.length) d.vehicles = parsed.vehicles;
+    if(Array.isArray(parsed.history)) d.history = parsed.history;
+    if(parsed.draft) d.draft = parsed.draft;
+    return d;
+  }catch(e){
+    console.warn("crew-roster: failed to load saved data, starting fresh", e);
+    return defaultState();
+  }
+}
+
+var persistOk = true;
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    persistOk = true;
+  }catch(e){
+    if(persistOk) toast("Could not save — your browser storage may be full or private.");
+    persistOk = false;
+    console.warn("crew-roster: failed to save", e);
+  }
+}
+
+var state = loadState();
+var ui = { route:"home", selectedPersonId:null, pinsOpen:false, driverPickerCar:null, editingHistoryDate:null };
+
+function todayStr(){
+  var d = new Date();
+  var mm = String(d.getMonth()+1).padStart(2,"0");
+  var dd = String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+mm+"-"+dd;
+}
+function formatDateLong(iso){
+  var parts = iso.split("-").map(Number);
+  var d = new Date(parts[0], parts[1]-1, parts[2]);
+  return d.toLocaleDateString(undefined, {weekday:"long", year:"numeric", month:"long", day:"numeric"});
+}
+function formatDateShort(iso){
+  var parts = iso.split("-").map(Number);
+  var d = new Date(parts[0], parts[1]-1, parts[2]);
+  return d.toLocaleDateString(undefined, {weekday:"short", year:"numeric", month:"short", day:"numeric"});
+}
+
+function ensureTodayDraft(){
+  var today = todayStr();
+  if(!state.draft || state.draft.date !== today){
+    state.draft = { date: today, absentIds: [], pins: {}, cars: null, warnings: [], savedAt: null, dirty:false };
+  }
+}
+ensureTodayDraft();
+
+function escapeHtml(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function personById(id){ return state.people.filter(function(p){ return p.id===id; })[0] || null; }
+function vehicleById(id){ return state.vehicles.filter(function(v){ return v.id===id; })[0] || null; }
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t=a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+
+function driverStats(history, personId){
+  var drives = 0, lastDate = null;
+  for(var i=0;i<history.length;i++){
+    var day = history[i];
+    for(var c=0;c<day.cars.length;c++){
+      if(day.cars[c].driverId === personId){
+        drives++;
+        if(!lastDate || day.date > lastDate) lastDate = day.date;
+      }
+    }
+  }
+  return {drives:drives, lastDate:lastDate};
+}
+
+function seatSizes(n, k){
+  var base = Math.floor(n/k), rem = n % k;
+  var sizes = new Array(k).fill(base);
+  var idxs = shuffle(Array.from({length:k}, function(_,i){ return i; }));
+  for(var i=0;i<rem;i++) sizes[idxs[i]] += 1;
+  return sizes;
+}
+
+function currentCount(assign, idx){
+  var n=0;
+  for(var id in assign){ if(assign[id]===idx) n++; }
+  return n;
+}
+
+function pickCarIndex(k, assign, sizes, avoidIdx){
+  var candidates = [];
+  for(var i=0;i<k;i++) candidates.push(i);
+  if(avoidIdx!==undefined && avoidIdx!==null){
+    var withoutAvoid = candidates.filter(function(i){ return i!==avoidIdx; });
+    if(withoutAvoid.length) candidates = withoutAvoid;
+  }
+  var scored = candidates.map(function(i){ return {i:i, slack: sizes[i]-currentCount(assign,i)}; });
+  var maxSlack = Math.max.apply(null, scored.map(function(s){ return s.slack; }));
+  var best = shuffle(scored.filter(function(s){ return s.slack===maxSlack; }));
+  return best[0].i;
+}
+
+function setsEqual(a,b){
+  if(a.size!==b.size) return false;
+  for(var x of a) if(!b.has(x)) return false;
+  return true;
+}
+
+function isExactRepeatOfPrevious(cars, prevDay){
+  if(!prevDay) return false;
+  var todaySets = cars.map(function(c){ return new Set(c.crewIds); });
+  var prevSets = prevDay.cars.map(function(c){ return new Set(c.crewIds); });
+  return todaySets.some(function(ts){ return prevSets.some(function(ps){ return setsEqual(ts,ps); }); });
+}
+
+function generateAllocation(fullState, absentIds, pins){
+  var people = fullState.people;
+  var vehicles = fullState.vehicles;
+  var k = vehicles.length;
+  var present = people.filter(function(p){ return absentIds.indexOf(p.id)===-1; });
+  var presentBOs = present.filter(function(p){ return p.role==="BO"; });
+
+  if(presentBOs.length < 3){
+    return { error: "Only "+presentBOs.length+" Build Officer"+(presentBOs.length===1?"":"s")+" present today — at least 3 are needed to crew "+k+" cars with a licensed driver each. No roster generated." };
+  }
+
+  var tl = present.filter(function(p){ return p.role==="TL"; })[0] || null;
+  var atl = present.filter(function(p){ return p.role==="ATL"; })[0] || null;
+
+  var vehicleIdxById = {};
+  vehicles.forEach(function(v,i){ vehicleIdxById[v.id]=i; });
+
+  var sizes = seatSizes(present.length, k);
+  var lockedAssign = {};
+  var pinnedToCar = Array.from({length:k}, function(){ return []; });
+  var pinnedDriverForCar = new Array(k).fill(null);
+  var presentIds = present.map(function(p){ return p.id; });
+
+  Object.keys(pins||{}).forEach(function(personId){
+    if(presentIds.indexOf(personId)===-1) return;
+    var pin = pins[personId];
+    if(!pin) return;
+    if(pin.vehicleId && vehicleIdxById[pin.vehicleId]!==undefined){
+      var idx = vehicleIdxById[pin.vehicleId];
+      pinnedToCar[idx].push(personId);
+      lockedAssign[personId] = idx;
+      if(pin.asDriver){
+        var person = personById(personId);
+        if(person && person.role==="BO") pinnedDriverForCar[idx] = personId;
+      }
+    }
+  });
+
+  for(var i=0;i<k;i++){ if(pinnedToCar[i].length > sizes[i]) sizes[i] = pinnedToCar[i].length; }
+
+  var warnings = [];
+
+  var tlCar = tl ? lockedAssign[tl.id] : undefined;
+  var atlCar = atl ? lockedAssign[atl.id] : undefined;
+  if(tl && tlCar===undefined){
+    tlCar = pickCarIndex(k, lockedAssign, sizes, atlCar);
+    lockedAssign[tl.id] = tlCar;
+  }
+  if(atl && atlCar===undefined){
+    atlCar = pickCarIndex(k, lockedAssign, sizes, tlCar);
+    lockedAssign[atl.id] = atlCar;
+  }
+  if(tl && atl && lockedAssign[tl.id]===lockedAssign[atl.id]){
+    warnings.push({level:"info", message:"Team Leader and Assistant Team Leader ended up in the same car because of a pin."});
+  }
+
+  var history = fullState.history;
+  var prevDay = history.length ? history.reduce(function(a,b){ return a.date>b.date?a:b; }) : null;
+  var droveLastDay = new Set(prevDay ? prevDay.cars.map(function(c){ return c.driverId; }).filter(Boolean) : []);
+
+  function compareCandidates(a,b){
+    if(a.droveLastDay !== b.droveLastDay) return a.droveLastDay ? 1 : -1;
+    if(a.stats.drives !== b.stats.drives) return a.stats.drives - b.stats.drives;
+    var at = a.stats.lastDate ? Date.parse(a.stats.lastDate) : -Infinity;
+    var bt = b.stats.lastDate ? Date.parse(b.stats.lastDate) : -Infinity;
+    if(at !== bt) return at - bt;
+    return 0;
+  }
+  function weightedPick(sorted){
+    var kk = Math.min(3, sorted.length);
+    var weights = [3,2,1].slice(0,kk);
+    var total = weights.reduce(function(a,b){ return a+b; },0);
+    var r = Math.random()*total;
+    for(var i=0;i<kk;i++){ if(r<weights[i]) return sorted[i]; r-=weights[i]; }
+    return sorted[0];
+  }
+
+  var driverAssign = {};
+  var usedDrivers = {};
+  for(i=0;i<k;i++){
+    if(pinnedDriverForCar[i]){
+      driverAssign[i] = pinnedDriverForCar[i];
+      usedDrivers[pinnedDriverForCar[i]] = true;
+      lockedAssign[pinnedDriverForCar[i]] = i;
+    }
+  }
+  var remainingCarIdx = shuffle(Array.from({length:k}, function(_,i){ return i; }).filter(function(i){ return driverAssign[i]===undefined; }));
+  remainingCarIdx.forEach(function(i){
+    var candidates = presentBOs.filter(function(bo){
+      return !usedDrivers[bo.id] && (lockedAssign[bo.id]===undefined || lockedAssign[bo.id]===i);
+    }).map(function(bo){ return {bo:bo, stats: driverStats(history, bo.id), droveLastDay: droveLastDay.has(bo.id)}; });
+    if(candidates.length===0){
+      var vname = vehicles[i].name;
+      warnings.push({level:"error", message:"No eligible Build Officer left to drive "+vname+"."});
+      return;
+    }
+    candidates.sort(compareCandidates);
+    var chosen = weightedPick(candidates).bo;
+    driverAssign[i] = chosen.id;
+    usedDrivers[chosen.id] = true;
+    lockedAssign[chosen.id] = i;
+  });
+
+  var attempts = 0, maxAttempts = 25, cars;
+  var freeCount = present.filter(function(p){ return lockedAssign[p.id]===undefined; }).length;
+  do{
+    var trial = Object.assign({}, lockedAssign);
+    var remaining = shuffle(present.filter(function(p){ return trial[p.id]===undefined; }));
+    remaining.forEach(function(p){
+      var idx = pickCarIndex(k, trial, sizes);
+      trial[p.id] = idx;
+    });
+    cars = vehicles.map(function(v,i){
+      var crewIds = [];
+      Object.keys(trial).forEach(function(pid){ if(trial[pid]===i) crewIds.push(pid); });
+      return { vehicleId: v.id, driverId: driverAssign[i]!==undefined ? driverAssign[i] : null, crewIds: crewIds };
+    });
+    attempts++;
+  } while(attempts<maxAttempts && freeCount>0 && isExactRepeatOfPrevious(cars, prevDay));
+
+  if(freeCount>0 && attempts>=maxAttempts && isExactRepeatOfPrevious(cars, prevDay)){
+    warnings.push({level:"info", message:"Could not avoid repeating one of yesterday's exact crews given the current pins."});
+  }
+
+  return { cars: cars, warnings: warnings };
+}
+
+function validateCars(cars, people, vehicles){
+  var violations = [];
+  var tl = people.filter(function(p){ return p.role==="TL"; })[0];
+  var atl = people.filter(function(p){ return p.role==="ATL"; })[0];
+  if(tl && atl){
+    var tlCar = cars.filter(function(c){ return c.crewIds.indexOf(tl.id)!==-1; })[0];
+    var atlCar = cars.filter(function(c){ return c.crewIds.indexOf(atl.id)!==-1; })[0];
+    if(tlCar && atlCar && tlCar===atlCar){
+      violations.push({rule:"tl-atl-together", message: tl.name+" and "+atl.name+" are in the same car."});
+    }
+  }
+  cars.forEach(function(c, i){
+    var vname = (vehicles[i] && vehicles[i].name) || ("Car "+(i+1));
+    if(!c.driverId){
+      violations.push({rule:"no-driver", carIndex:i, message: vname+" has no driver."});
+    }else{
+      var driver = personById(c.driverId);
+      if(!driver || driver.role!=="BO"){
+        violations.push({rule:"invalid-driver", carIndex:i, message:"The driver of "+vname+" is "+(driver?driver.name+", who is "+(driver.role==="TL"?"the Team Leader":"the Assistant Team Leader"):"unknown")+" — drivers must be Build Officers."});
+      }
+    }
+  });
+  return violations;
+}
+
+function toast(msg){
+  var el = document.getElementById("cr-toast");
+  el.textContent = msg;
+  el.classList.add("cr-show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ el.classList.remove("cr-show"); }, 2200);
+}
+
+function showModal(opts){
+  var root = document.getElementById("cr-modal-root");
+  var danger = opts.danger ? "cr-btn-danger" : "cr-btn-primary";
+  root.innerHTML =
+    '<div class="cr-modal-overlay" id="cr-modal-overlay">'+
+      '<div class="cr-modal">'+
+        '<h3>'+escapeHtml(opts.title)+'</h3>'+
+        '<p>'+escapeHtml(opts.body)+'</p>'+
+        '<div class="cr-btn-row">'+
+          '<button class="cr-btn cr-btn-secondary" id="cr-modal-cancel">'+escapeHtml(opts.cancelLabel||"Cancel")+'</button>'+
+          '<button class="cr-btn '+danger+'" id="cr-modal-confirm">'+escapeHtml(opts.confirmLabel||"Confirm")+'</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  document.getElementById("cr-modal-cancel").onclick = closeModal;
+  document.getElementById("cr-modal-overlay").addEventListener("click", function(e){ if(e.target.id==="cr-modal-overlay") closeModal(); });
+  document.getElementById("cr-modal-confirm").onclick = function(){ closeModal(); opts.onConfirm(); };
+}
+function closeModal(){ document.getElementById("cr-modal-root").innerHTML = ""; }
+
+function driverIcon(color){
+  return '<svg class="cr-driver-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'+
+    '<rect x="2" y="10" width="20" height="8" rx="2" fill="'+color+'"/>'+
+    '<path d="M4 10L6.5 4.5C6.9 3.6 7.8 3 8.8 3H15.2C16.2 3 17.1 3.6 17.5 4.5L20 10" stroke="'+color+'" stroke-width="1.6" fill="none"/>'+
+    '<circle cx="7" cy="18.5" r="2.2" fill="'+color+'"/><circle cx="17" cy="18.5" r="2.2" fill="'+color+'"/>'+
+  '</svg>';
+}
+var NAV_ICONS = {
+  home: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 11L12 4L20 11V19A1 1 0 0 1 19 20H5A1 1 0 0 1 4 19V11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  history: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V12L15.5 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  tally: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 19V13M11 19V9M17 19V5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  setup: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 4V6.2M12 17.8V20M4 12H6.2M17.8 12H20M6.5 6.5L8 8M16 16L17.5 17.5M17.5 6.5L16 8M8 16L6.5 17.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+};
+
+function renderNav(){
+  var items = [["home","Home"],["history","History"],["tally","Tally"],["setup","Setup"]];
+  document.getElementById("cr-navbar").innerHTML = items.map(function(it){
+    var active = ui.route===it[0] ? " cr-active" : "";
+    return '<button class="cr-navbtn'+active+'" data-nav="'+it[0]+'">'+NAV_ICONS[it[0]]+'<span>'+it[1]+'</span></button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(btn){
+    btn.onclick = function(){ ui.route = btn.getAttribute("data-nav"); ui.selectedPersonId=null; ui.driverPickerCar=null; render(); };
+  });
+}
+
+function badgeFor(person){
+  if(person.role==="TL") return '<span class="cr-badge cr-badge-tl">TL</span>';
+  if(person.role==="ATL") return '<span class="cr-badge cr-badge-atl">ATL</span>';
+  return "";
+}
+
+function renderHome(){
+  ensureTodayDraft();
+  var draft = state.draft;
+  var absentSet = draft.absentIds;
+  var present = state.people.filter(function(p){ return absentSet.indexOf(p.id)===-1; });
+  var presentBOs = present.filter(function(p){ return p.role==="BO"; });
+  var canGenerate = presentBOs.length >= 3;
+
+  var rows = state.people.map(function(p){
+    var isAbsent = absentSet.indexOf(p.id)!==-1;
+    return '<div class="cr-row">'+
+      '<div class="cr-row-name">'+badgeFor(p)+'<span class="cr-name-text">'+escapeHtml(p.name)+'</span></div>'+
+      '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<span class="cr-toggle-label '+(isAbsent?"cr-is-absent":"cr-is-present")+'">'+(isAbsent?"Absent":"Present")+'</span>'+
+        '<button class="cr-toggle'+(isAbsent?"":" cr-present")+'" data-toggle-absent="'+p.id+'" aria-label="Toggle present/absent for '+escapeHtml(p.name)+'"></button>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+
+  var pinRows = present.map(function(p){
+    var pin = draft.pins[p.id] || {};
+    var carOptions = '<option value="">No pin</option>' + state.vehicles.map(function(v){
+      return '<option value="'+v.id+'"'+(pin.vehicleId===v.id?" selected":"")+'>'+escapeHtml(v.name)+'</option>';
+    }).join("");
+    var driverOption = "";
+    if(p.role==="BO"){
+      driverOption = '<select class="cr-select" data-pin-driver="'+p.id+'" '+(pin.vehicleId?"":"disabled")+'>'+
+        '<option value="">Not pinned as driver</option>'+
+        '<option value="1"'+(pin.asDriver?" selected":"")+'>Pin as driver of that car</option>'+
+      '</select>';
+    }
+    return '<div class="cr-pin-row">'+
+      '<div class="cr-row-name">'+badgeFor(p)+'<span class="cr-name-text">'+escapeHtml(p.name)+'</span></div>'+
+      '<div class="cr-pin-controls">'+
+        '<select class="cr-select" data-pin-car="'+p.id+'">'+carOptions+'</select>'+
+        driverOption+
+      '</div>'+
+    '</div>';
+  }).join("") || '<div class="cr-status-line">No one present to pin yet.</div>';
+
+  var statusLine;
+  if(!canGenerate){
+    statusLine = '<div class="cr-status-line cr-blocked">Only '+presentBOs.length+' of 10 Build Officers present — need at least 3 to generate a roster.</div>';
+  }else{
+    statusLine = '<div class="cr-status-line">'+present.length+' present · '+state.vehicles.length+' cars · ready to generate.</div>';
+  }
+
+  var alreadyToday = state.history.some(function(d){ return d.date===draft.date; });
+
+  document.getElementById("cr-app").innerHTML =
+    '<div class="cr-topbar"><h1>Crew Roster</h1><div class="cr-date">'+formatDateLong(draft.date)+'</div></div>'+
+    (alreadyToday ? '<div class="cr-warning-banner"><div class="cr-warning-banner-title">Today already has a saved roster</div><div style="font-size:14px;color:var(--text-2);">Generating again will let you update it — remember to Confirm to save your changes.</div></div>' : "") +
+    '<div class="cr-card"><div class="cr-section-title">Who\'s in today</div>'+rows+'</div>'+
+    '<details class="cr-disclosure" id="cr-pins-details"><summary>Pins (optional) — set before generating</summary>'+
+      '<div class="cr-card" style="margin-top:8px;">'+pinRows+'</div>'+
+    '</details>'+
+    statusLine+
+    '<button class="cr-btn cr-btn-primary" id="cr-generate-btn" '+(canGenerate?"":"disabled")+'>Generate Roster</button>';
+
+  var pinsDetails = document.getElementById("cr-pins-details");
+  pinsDetails.open = ui.pinsOpen;
+  pinsDetails.addEventListener("toggle", function(){ ui.pinsOpen = pinsDetails.open; });
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-toggle-absent]"), function(el){
+    el.onclick = function(){
+      var id = el.getAttribute("data-toggle-absent");
+      var idx = draft.absentIds.indexOf(id);
+      if(idx===-1) draft.absentIds.push(id); else draft.absentIds.splice(idx,1);
+      if(idx===-1){ delete draft.pins[id]; }
+      saveState(); render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pin-car]"), function(el){
+    el.onchange = function(){
+      var id = el.getAttribute("data-pin-car");
+      var val = el.value;
+      if(!val){ delete draft.pins[id]; }
+      else{ draft.pins[id] = draft.pins[id] || {}; draft.pins[id].vehicleId = val; }
+      saveState(); render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pin-driver]"), function(el){
+    el.onchange = function(){
+      var id = el.getAttribute("data-pin-driver");
+      if(!draft.pins[id]) draft.pins[id] = {};
+      draft.pins[id].asDriver = !!el.value;
+      saveState(); render();
+    };
+  });
+  var genBtn = document.getElementById("cr-generate-btn");
+  if(genBtn){
+    genBtn.onclick = function(){
+      var result = generateAllocation(state, draft.absentIds, draft.pins);
+      if(result.error){ toast(result.error); return; }
+      draft.cars = result.cars;
+      draft.warnings = result.warnings;
+      draft.dirty = true;
+      saveState();
+      ui.route = "result";
+      render();
+    };
+  }
+}
+
+function renderResult(){
+  var draft = state.draft;
+  if(!draft || !draft.cars){ ui.route="home"; render(); return; }
+
+  var ruleViolations = validateCars(draft.cars, state.people, state.vehicles);
+  var infoWarnings = draft.warnings.filter(function(w){ return w.level==="info"; });
+  var genErrors = draft.warnings.filter(function(w){ return w.level==="error"; });
+
+  var bannerHtml = "";
+  if(ruleViolations.length || genErrors.length){
+    bannerHtml = '<div class="cr-warning-banner cr-critical"><div class="cr-warning-banner-title">⚠ Rule broken</div><ul>'+
+      genErrors.concat(ruleViolations).map(function(v){ return '<li>'+escapeHtml(v.message)+'</li>'; }).join("")+
+    '</ul></div>';
+  }
+  if(infoWarnings.length){
+    bannerHtml += '<div class="cr-warning-banner"><div class="cr-warning-banner-title">Note</div><ul>'+
+      infoWarnings.map(function(w){ return '<li>'+escapeHtml(w.message)+'</li>'; }).join("")+
+    '</ul></div>';
+  }
+
+  var carColors = ["var(--car1)","var(--car2)","var(--car3)"];
+  var carsHtml = draft.cars.map(function(c, i){
+    var vehicle = vehicleById(c.vehicleId);
+    var color = carColors[i % carColors.length];
+    var driver = c.driverId ? personById(c.driverId) : null;
+    var crewHtml = c.crewIds.map(function(pid){
+      var p = personById(pid);
+      if(!p) return "";
+      var selected = ui.selectedPersonId===pid ? " cr-selected" : "";
+      var isDriver = c.driverId===pid ? " cr-is-driver" : "";
+      return '<button class="cr-chip'+selected+isDriver+'" data-swap-person="'+pid+'">'+badgeFor(p)+(c.driverId===pid?"🚗 ":"")+escapeHtml(p.name)+'</button>';
+    }).join("");
+    return '<div class="cr-car-card">'+
+      '<div class="cr-car-head" style="background:'+color+';">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+          '<h3>'+escapeHtml(vehicle?vehicle.name:"Car")+'</h3>'+
+          '<span class="cr-seat-count">'+c.crewIds.length+' aboard</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="cr-driver-row" data-driver-picker="'+i+'">'+
+        driverIcon(color)+
+        '<div class="cr-driver-text">'+
+          '<div class="cr-driver-label">Driver</div>'+
+          '<div class="cr-driver-name'+(driver?"":" cr-no-driver")+'">'+(driver?escapeHtml(driver.name):"No driver assigned")+'</div>'+
+        '</div>'+
+        '<div class="cr-chevron">✎</div>'+
+      '</div>'+
+      '<div class="cr-crew-list">'+(crewHtml||'<div class="cr-status-line">No one assigned to this car.</div>')+'</div>'+
+    '</div>';
+  }).join("");
+
+  var driverPickerHtml = "";
+  if(ui.driverPickerCar!==null){
+    var carIdx = ui.driverPickerCar;
+    var car = draft.cars[carIdx];
+    var vehicle = vehicleById(car.vehicleId);
+    var options = car.crewIds.map(function(pid){
+      var p = personById(pid);
+      var current = car.driverId===pid ? " (current)" : "";
+      return '<button class="cr-btn cr-btn-secondary" data-set-driver="'+pid+'" style="margin-bottom:8px;">'+escapeHtml(p.name)+(p.role!=="BO"?" — "+p.role:"")+current+'</button>';
+    }).join("") || '<div class="cr-status-line">No one is in this car yet — swap someone in first.</div>';
+    driverPickerHtml = '<div class="cr-modal-overlay" id="cr-driver-overlay"><div class="cr-modal">'+
+      '<h3>Set driver — '+escapeHtml(vehicle.name)+'</h3>'+
+      '<p>Choose who drives this car. Picking a Team Leader or Assistant Team Leader will break the driver rule and show a warning.</p>'+
+      options+
+      '<button class="cr-btn cr-btn-ghost" id="cr-driver-cancel">Cancel</button>'+
+    '</div></div>';
+  }
+
+  var savedTag = draft.savedAt && !draft.dirty ? '<div class="cr-status-line" style="color:var(--good);">✓ Saved to history</div>' : (draft.savedAt ? '<div class="cr-status-line">Unsaved changes — Confirm to update history.</div>' : "");
+
+  document.getElementById("cr-app").innerHTML =
+    '<div class="cr-topbar"><h1>Crew Roster</h1><div class="cr-date">'+formatDateLong(draft.date)+'</div></div>'+
+    bannerHtml + carsHtml + savedTag +
+    '<div class="cr-btn-row" style="margin-bottom:10px;">'+
+      '<button class="cr-btn cr-btn-secondary" id="cr-regenerate-btn">Regenerate</button>'+
+      '<button class="cr-btn cr-btn-primary" id="cr-confirm-btn">Confirm</button>'+
+    '</div>'+
+    '<button class="cr-btn cr-btn-ghost" id="cr-copy-btn">Copy as text</button>';
+
+  document.getElementById("cr-modal-root").innerHTML = driverPickerHtml;
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-swap-person]"), function(el){
+    el.onclick = function(){
+      var pid = el.getAttribute("data-swap-person");
+      if(ui.selectedPersonId===null){
+        ui.selectedPersonId = pid;
+        render();
+        return;
+      }
+      if(ui.selectedPersonId===pid){
+        ui.selectedPersonId = null;
+        render();
+        return;
+      }
+      swapPeople(ui.selectedPersonId, pid);
+      ui.selectedPersonId = null;
+      draft.dirty = true;
+      saveState();
+      render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-driver-picker]"), function(el){
+    el.onclick = function(){
+      ui.driverPickerCar = parseInt(el.getAttribute("data-driver-picker"),10);
+      ui.selectedPersonId = null;
+      render();
+    };
+  });
+  var driverCancel = document.getElementById("cr-driver-cancel");
+  if(driverCancel) driverCancel.onclick = function(){ ui.driverPickerCar=null; render(); };
+  var driverOverlay = document.getElementById("cr-driver-overlay");
+  if(driverOverlay) driverOverlay.addEventListener("click", function(e){ if(e.target.id==="cr-driver-overlay"){ ui.driverPickerCar=null; render(); } });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-set-driver]"), function(el){
+    el.onclick = function(){
+      var pid = el.getAttribute("data-set-driver");
+      draft.cars[ui.driverPickerCar].driverId = pid;
+      draft.dirty = true;
+      ui.driverPickerCar = null;
+      saveState(); render();
+    };
+  });
+
+  document.getElementById("cr-regenerate-btn").onclick = function(){
+    var result = generateAllocation(state, draft.absentIds, draft.pins);
+    if(result.error){ toast(result.error); return; }
+    draft.cars = result.cars;
+    draft.warnings = result.warnings;
+    draft.dirty = true;
+    ui.selectedPersonId = null;
+    saveState(); render();
+  };
+  document.getElementById("cr-confirm-btn").onclick = function(){
+    var entry = { date: draft.date, cars: JSON.parse(JSON.stringify(draft.cars)), confirmedAt: new Date().toISOString() };
+    var idx = state.history.findIndex(function(d){ return d.date===draft.date; });
+    if(idx!==-1) state.history[idx] = entry; else state.history.push(entry);
+    draft.pins = {};
+    draft.savedAt = entry.confirmedAt;
+    draft.dirty = false;
+    saveState();
+    toast("Saved to history for "+formatDateShort(draft.date));
+    render();
+  };
+  document.getElementById("cr-copy-btn").onclick = function(){
+    copyDayAsText(draft.date, draft.cars);
+  };
+}
+
+function swapPeople(idA, idB){
+  var draft = state.draft;
+  var carA = null, carB = null;
+  draft.cars.forEach(function(c){
+    if(c.crewIds.indexOf(idA)!==-1) carA = c;
+    if(c.crewIds.indexOf(idB)!==-1) carB = c;
+  });
+  if(!carA || !carB || carA===carB) return;
+  carA.crewIds.splice(carA.crewIds.indexOf(idA),1);
+  carB.crewIds.splice(carB.crewIds.indexOf(idB),1);
+  carA.crewIds.push(idB);
+  carB.crewIds.push(idA);
+  if(carA.driverId===idA) carA.driverId = null;
+  if(carB.driverId===idB) carB.driverId = null;
+}
+
+function copyDayAsText(date, cars){
+  var lines = ["Crew Roster — "+formatDateShort(date), ""];
+  cars.forEach(function(c){
+    var v = vehicleById(c.vehicleId);
+    var driver = c.driverId ? personById(c.driverId) : null;
+    lines.push(v ? v.name : "Car");
+    lines.push("🚗 Driver: "+(driver?driver.name:"— none —"));
+    var crewNames = c.crewIds.map(function(pid){
+      var p = personById(pid);
+      if(!p) return "";
+      var tag = p.role==="TL"?" (TL)":p.role==="ATL"?" (ATL)":"";
+      return p.name+tag;
+    });
+    lines.push("Crew: "+(crewNames.join(", ")||"none"));
+    lines.push("");
+  });
+  var text = lines.join("\n").trim();
+  var done = function(){ toast("Copied to clipboard"); };
+  var fail = function(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("Copied to clipboard"); }
+    catch(e){ toast("Could not copy — please copy manually."); }
+    document.body.removeChild(ta);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, fail);
+  }else{
+    fail();
+  }
+}
+
+function renderHistory(){
+  var days = state.history.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var body;
+  if(!days.length){
+    body = '<div class="cr-empty-state">No confirmed days yet.<br>Generate and confirm a roster to see it here.</div>';
+  }else{
+    body = days.map(function(day){
+      var carsHtml = day.cars.map(function(c,i){
+        var v = vehicleById(c.vehicleId);
+        var driver = c.driverId ? personById(c.driverId) : null;
+        var crewNames = c.crewIds.map(function(pid){
+          var p = personById(pid);
+          if(!p) return "(removed)";
+          var tag = p.role==="TL"?" (TL)":p.role==="ATL"?" (ATL)":"";
+          return escapeHtml(p.name+tag);
+        }).join(", ");
+        return '<div class="cr-history-car" style="border-color:'+["var(--car1)","var(--car2)","var(--car3)"][i%3]+';">'+
+          '<b>'+escapeHtml(v?v.name:"Car")+' — 🚗 '+escapeHtml(driver?driver.name:"no driver")+'</b>'+
+          (crewNames||"no crew")+
+        '</div>';
+      }).join("");
+      return '<div class="cr-history-day">'+
+        '<div class="cr-history-day-head"><h3>'+escapeHtml(formatDateLong(day.date))+'</h3></div>'+
+        carsHtml+
+        '<div class="cr-history-actions">'+
+          '<button class="cr-btn cr-btn-secondary cr-btn-sm" data-edit-day="'+day.date+'">Edit</button>'+
+          '<button class="cr-btn cr-btn-danger cr-btn-sm" data-delete-day="'+day.date+'">Delete</button>'+
+          '<button class="cr-btn cr-btn-ghost cr-btn-sm" data-copy-day="'+day.date+'">Copy</button>'+
+        '</div>'+
+      '</div>';
+    }).join("");
+  }
+
+  document.getElementById("cr-app").innerHTML =
+    '<div class="cr-topbar"><h1>History</h1><div class="cr-date">'+days.length+' confirmed day'+(days.length===1?"":"s")+'</div></div>'+
+    body;
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-edit-day]"), function(el){
+    el.onclick = function(){
+      var date = el.getAttribute("data-edit-day");
+      var day = state.history.filter(function(d){ return d.date===date; })[0];
+      state.draft = { date: date, absentIds: computeAbsentFromCars(day.cars), pins: {}, cars: JSON.parse(JSON.stringify(day.cars)), warnings: [], savedAt: day.confirmedAt, dirty:false };
+      ui.route = "result";
+      render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-copy-day]"), function(el){
+    el.onclick = function(){
+      var date = el.getAttribute("data-copy-day");
+      var day = state.history.filter(function(d){ return d.date===date; })[0];
+      copyDayAsText(day.date, day.cars);
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-delete-day]"), function(el){
+    el.onclick = function(){
+      var date = el.getAttribute("data-delete-day");
+      showModal({
+        title: "Delete this day?",
+        body: "This removes the confirmed roster for "+formatDateShort(date)+" and its drives from the tally. This can't be undone.",
+        confirmLabel: "Delete", danger:true,
+        onConfirm: function(){
+          state.history = state.history.filter(function(d){ return d.date!==date; });
+          saveState(); toast("Deleted "+formatDateShort(date)); render();
+        }
+      });
+    };
+  });
+}
+
+function computeAbsentFromCars(cars){
+  var presentIds = {};
+  cars.forEach(function(c){ c.crewIds.forEach(function(id){ presentIds[id]=true; }); });
+  return state.people.filter(function(p){ return !presentIds[p.id]; }).map(function(p){ return p.id; });
+}
+
+function renderTally(){
+  var bos = state.people.filter(function(p){ return p.role==="BO"; });
+  var rows = bos.map(function(p){
+    var stats = driverStats(state.history, p.id);
+    var daysSince = stats.lastDate ? Math.round((Date.parse(todayStr())-Date.parse(stats.lastDate))/86400000) : null;
+    return { id:p.id, name:p.name, drives:stats.drives, lastDate:stats.lastDate, daysSince:daysSince };
+  });
+  rows.sort(function(a,b){
+    if(a.drives!==b.drives) return a.drives-b.drives;
+    var oa = a.daysSince===null?Infinity:a.daysSince;
+    var ob = b.daysSince===null?Infinity:b.daysSince;
+    return ob-oa;
+  });
+  var maxDrives = Math.max.apply(null, rows.map(function(r){ return r.drives; }).concat([1]));
+
+  var body = rows.map(function(r){
+    var pct = Math.max(r.drives>0 ? (r.drives/maxDrives*100) : 0, r.drives>0?4:0);
+    var metaText = r.lastDate ? ("Last drove "+formatDateShort(r.lastDate)+" · "+r.daysSince+" day"+(r.daysSince===1?"":"s")+" ago") : "Never driven yet";
+    return '<div class="cr-tally-row">'+
+      '<div class="cr-tally-top"><span class="cr-tally-name">'+escapeHtml(r.name)+'</span><span class="cr-tally-meta">'+metaText+'</span></div>'+
+      '<div class="cr-tally-bar-row"><div class="cr-tally-bar-track" style="flex:1;"><div class="cr-tally-bar-fill" style="width:'+pct+'%;"></div></div><span class="cr-tally-count">'+r.drives+' drive'+(r.drives===1?"":"s")+'</span></div>'+
+    '</div>';
+  }).join("");
+
+  document.getElementById("cr-app").innerHTML =
+    '<div class="cr-topbar"><h1>Driving Tally</h1><div class="cr-date">Fewest drives first — the imbalance you should fix</div></div>'+
+    '<div class="cr-card">'+(body||'<div class="cr-empty-state">No drives recorded yet.</div>')+'</div>'+
+    '<button class="cr-btn cr-btn-secondary" id="cr-export-csv">Export history as CSV</button>';
+
+  document.getElementById("cr-export-csv").onclick = exportCsv;
+}
+
+function csvEscape(v){
+  var s = String(v==null?"":v);
+  if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function exportCsv(){
+  var rows = [["Date","Vehicle","Driver","Crew","Team Leader In Car","Assistant Team Leader In Car"]];
+  var days = state.history.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  days.forEach(function(day){
+    day.cars.forEach(function(c){
+      var v = vehicleById(c.vehicleId);
+      var driver = c.driverId ? personById(c.driverId) : null;
+      var crewNames = c.crewIds.map(function(pid){ var p=personById(pid); return p?p.name:"(removed)"; });
+      var tlIn = c.crewIds.some(function(pid){ var p=personById(pid); return p && p.role==="TL"; });
+      var atlIn = c.crewIds.some(function(pid){ var p=personById(pid); return p && p.role==="ATL"; });
+      rows.push([day.date, v?v.name:c.vehicleId, driver?driver.name:"", crewNames.join("; "), tlIn?"Y":"N", atlIn?"Y":"N"]);
+    });
+  });
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(","); }).join("\r\n");
+  var blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "crew-roster-history-"+todayStr()+".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast("CSV downloaded");
+}
+
+function renderSetup(){
+  var leaders = state.people.filter(function(p){ return p.role==="TL"||p.role==="ATL"; });
+  var bos = state.people.filter(function(p){ return p.role==="BO"; });
+
+  function nameField(p){
+    return '<div class="cr-field"><label>'+(p.role==="BO"?"Build Officer":(p.role==="TL"?"Team Leader":"Assistant Team Leader"))+'</label>'+
+      '<input class="cr-input" type="text" value="'+escapeHtml(p.name)+'" data-person-name="'+p.id+'"></div>';
+  }
+  var leaderFields = leaders.map(nameField).join("");
+  var boFields = bos.map(nameField).join("");
+  var vehicleFields = state.vehicles.map(function(v){
+    return '<div class="cr-field"><label>Vehicle</label><input class="cr-input" type="text" value="'+escapeHtml(v.name)+'" data-vehicle-name="'+v.id+'"></div>';
+  }).join("");
+
+  document.getElementById("cr-app").innerHTML =
+    '<div class="cr-topbar"><h1>Setup</h1><div class="cr-date">Names save automatically</div></div>'+
+    '<div class="cr-card"><div class="cr-section-title">Leadership</div>'+leaderFields+'</div>'+
+    '<div class="cr-card"><div class="cr-section-title">Build Officers</div>'+boFields+'</div>'+
+    '<div class="cr-card"><div class="cr-section-title">Vehicles</div>'+vehicleFields+'</div>'+
+    '<div class="cr-card">'+
+      '<div class="cr-section-title">Data</div>'+
+      '<div class="cr-btn-row" style="margin-bottom:10px;">'+
+        '<button class="cr-btn cr-btn-secondary" id="cr-export-csv-2">Export CSV</button>'+
+      '</div>'+
+      '<button class="cr-btn cr-btn-danger" id="cr-wipe-all">Wipe all data</button>'+
+    '</div>';
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-person-name]"), function(el){
+    el.onchange = function(){
+      var id = el.getAttribute("data-person-name");
+      var val = el.value.trim();
+      var p = personById(id);
+      if(p) p.name = val || p.name;
+      saveState(); toast("Saved"); render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-vehicle-name]"), function(el){
+    el.onchange = function(){
+      var id = el.getAttribute("data-vehicle-name");
+      var val = el.value.trim();
+      var v = vehicleById(id);
+      if(v) v.name = val || v.name;
+      saveState(); toast("Saved"); render();
+    };
+  });
+  document.getElementById("cr-export-csv-2").onclick = exportCsv;
+  document.getElementById("cr-wipe-all").onclick = function(){
+    showModal({
+      title: "Wipe all data?",
+      body: "This permanently deletes all names, vehicles, history and driving tallies from this device. This cannot be undone.",
+      confirmLabel: "Wipe everything", danger:true,
+      onConfirm: function(){
+        localStorage.removeItem(STORAGE_KEY);
+        state = defaultState();
+        ensureTodayDraft();
+        ui.route = "home";
+        toast("All data wiped");
+        render();
+      }
+    });
+  };
+}
+
+var lastRenderedRoute = null;
+function render(){
+  if(ui.route==="home") renderHome();
+  else if(ui.route==="result") renderResult();
+  else if(ui.route==="history") renderHistory();
+  else if(ui.route==="tally") renderTally();
+  else if(ui.route==="setup") renderSetup();
+  renderNav();
+  if(ui.route !== lastRenderedRoute){
+    window.scrollTo(0,0);
+    lastRenderedRoute = ui.route;
+  }
+}
+
+if(state.draft && state.draft.cars && state.draft.date===todayStr()){
+  ui.route = "result";
+}
+render();
+
+window.__crewRosterTest = {
+  generateAllocation: generateAllocation,
+  validateCars: validateCars,
+  seatSizes: seatSizes,
+  driverStats: driverStats,
+  getState: function(){ return state; },
+  setState: function(s){ state = s; ensureTodayDraft(); saveState(); ui.route="home"; render(); },
+  swapPeople: swapPeople,
+  render: render,
+  setRoute: function(r){ ui.route = r; render(); }
+};
+
+})();
+</script>
+</body>
+</html>
