@@ -81,8 +81,9 @@ fun TallyScreen(
 private fun TallyRowItem(row: TallyRow, maxDrives: Int) {
     val extras = CrewRosterExtras.colors
     val fraction = if (row.drives > 0) (row.drives.toFloat() / maxDrives.toFloat()).coerceIn(0.03f, 1f) else 0f
-    val metaText = if (row.lastDate != null) {
-        "Last drove ${formatDateShort(row.lastDate)} - ${row.daysSince} day${if (row.daysSince == 1) "" else "s"} ago"
+    val lastDate = row.lastDate
+    val metaText = if (lastDate != null) {
+        "Last drove ${formatDateShort(lastDate)} - ${row.daysSince} day${if (row.daysSince == 1) "" else "s"} ago"
     } else {
         "Never driven yet"
     }

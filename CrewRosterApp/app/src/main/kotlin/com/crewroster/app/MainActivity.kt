@@ -100,7 +100,8 @@ fun CrewRosterApp(viewModel: CrewRosterViewModel = viewModel()) {
             }
             composable(RESULT_ROUTE) {
                 val draft = uiState.appData.draft
-                if (draft?.cars != null) {
+                val cars = draft?.cars
+                if (draft != null && cars != null) {
                     ResultScreen(
                         appData = uiState.appData,
                         draft = draft,
@@ -113,7 +114,7 @@ fun CrewRosterApp(viewModel: CrewRosterViewModel = viewModel()) {
                         onSetDriver = viewModel::setDriver,
                         onRegenerate = viewModel::regenerate,
                         onConfirm = viewModel::confirm,
-                        onCopyAsText = { viewModel.copyDayAsText(draft.date, draft.cars) }
+                        onCopyAsText = { viewModel.copyDayAsText(draft.date, cars) }
                     )
                 }
             }

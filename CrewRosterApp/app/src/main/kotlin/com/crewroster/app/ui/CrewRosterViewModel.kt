@@ -113,8 +113,9 @@ class CrewRosterViewModel(application: Application) : AndroidViewModel(applicati
         val data = ensureTodayDraft(_uiState.value.appData)
         val draft = data.draft ?: return
         val result = AllocationEngine.generate(data.people, data.vehicles, draft.absentIds, draft.pins, data.history)
-        if (result.error != null) {
-            emit(UiEvent.Toast(result.error))
+        val error = result.error
+        if (error != null) {
+            emit(UiEvent.Toast(error))
             return
         }
         updateDraft { it.copy(cars = result.cars, warnings = result.warnings, dirty = true) }
