@@ -53,7 +53,8 @@ class CrewRosterViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun ensureTodayDraft(data: AppData): AppData {
         val today = todayIso()
-        return if (data.draft == null || data.draft.date != today) {
+        val draft = data.draft
+        return if (draft == null || draft.date != today) {
             data.copy(draft = DraftState(date = today))
         } else data
     }
